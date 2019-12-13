@@ -16,7 +16,7 @@ from wcpan.drive.crypt.util import (
     encrypt_name,
 )
 from wcpan.drive.crypt.crypt import CryptMiddleware, InvalidCryptVersion
-from wcpan.drive.core.cache import node_from_dict
+from wcpan.drive.core.types import Node
 
 
 class TestCrypt(unittest.TestCase):
@@ -323,7 +323,7 @@ def create_node(name, private):
         'video': None,
         'private': private,
     }
-    return node_from_dict(dict_)
+    return Node.from_dict(dict_)
 
 
 def get_utc_now():
