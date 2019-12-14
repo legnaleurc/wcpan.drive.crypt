@@ -25,6 +25,7 @@ class TestCrypt(unittest.TestCase):
         binary = bytes(range(255))
 
         encoded = encrypt(binary)
+        self.assertNotEqual(encoded, binary)
         self.assertEqual(len(encoded), len(binary))
 
         decoded = decrypt(encoded)
@@ -39,6 +40,7 @@ class TestCrypt(unittest.TestCase):
         )
 
         encoded = encrypt_name(text)
+        self.assertNotEqual(encoded, text)
         matched = re.match(r'^[a-z0-9]+$', encoded)
         self.assertIsNotNone(matched)
 
