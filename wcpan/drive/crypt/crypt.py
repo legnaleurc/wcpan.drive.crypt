@@ -4,6 +4,7 @@ from wcpan.drive.core.types import (
     CreateFolderFunction,
     DownloadFunction,
     GetHasherFunction,
+    MediaInfo,
     Node,
     NodeDict,
     PrivateDict,
@@ -84,6 +85,7 @@ class CryptMiddleware(Middleware):
         file_name: str,
         file_size: Optional[int],
         mime_type: Optional[str],
+        media_info: Optional[MediaInfo],
         private: Optional[PrivateDict],
     ) -> WritableFile:
         if private is None:
@@ -98,9 +100,10 @@ class CryptMiddleware(Middleware):
         writable = await fn(
             parent_node,
             file_name,
-            file_size,
-            mime_type,
-            private,
+            file_size=file_size,
+            mime_type=mime_type,
+            media_info=media_info,
+            private=private,
         )
         return EncryptWritableFile(writable)
 
