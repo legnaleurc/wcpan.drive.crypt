@@ -1,17 +1,21 @@
-from typing import Optional
+from typing import Optional, AsyncGenerator, Tuple, List
+import contextlib
 
 from wcpan.drive.core.types import (
-    CreateFolderFunction,
-    DownloadFunction,
-    GetHasherFunction,
+    ChangeDict,
     MediaInfo,
     Node,
     NodeDict,
     PrivateDict,
-    RenameNodeFunction,
-    UploadFunction,
+    ReadOnlyContext,
 )
-from wcpan.drive.core.abc import ReadableFile, WritableFile, Middleware, Hasher
+from wcpan.drive.core.abc import (
+    ReadableFile,
+    WritableFile,
+    Middleware,
+    Hasher,
+    RemoteDriver,
+)
 
 from .util import (
     DecryptReadableFile,
@@ -29,33 +33,37 @@ class CryptMiddleware(Middleware):
     def get_version_range(cls):
         return (1, 1)
 
-    async def decode_dict(self, dict_: NodeDict) -> NodeDict:
-        if dict_['name'] is None:
-            return dict_
+    def __init__(self, context: ReadOnlyContext, driver: RemoteDriver):
+        self._context = context
+        self._driver = driver
+        self._raii = None
 
-        private = dict_.get('private', None)
-        if not private:
-            return dict_
-        if 'crypt' not in private:
-            return dict_
-        if private['crypt'] != '1':
-            raise InvalidCryptVersion()
+    async def __aenter__(self) -> Middleware:
+        async with contextlib.AsyncExitStack() as stack:
+            self._driver = await stack.enter_async_context(self._driver)
+            self._raii = stack.pop_all()
 
-        name = decrypt_name(dict_['name'])
-        dict_['name'] = name
-        return dict_
+    async def __aexit__(self, et, ev, tb) -> bool:
+        await self._raii.aclose()
+        self._raii = None
+
+    async def fetch_changes(self,
+        check_point: str,
+    ) -> AsyncGenerator[Tuple[str, List[ChangeDict]], None]:
+        async for check_point, changes in self._driver.fetch_changes(check_point):
+            decoded = [decode_change(change) for change in changes]
+            yield check_point, decoded
 
     async def rename_node(self,
-        fn: RenameNodeFunction,
         node: Node,
         new_parent: Optional[Node],
         new_name: Optional[str],
     ) -> Node:
         private = node.private
         if not private:
-            return await fn(node, new_parent, new_name)
+            return await self._driver.rename_node(node, new_parent, new_name)
         if 'crypt' not in private:
-            return await fn(node, new_parent, new_name)
+            return await self._driver.rename_node(node, new_parent, new_name)
         if private['crypt'] != '1':
             raise InvalidCryptVersion()
 
@@ -65,22 +73,21 @@ class CryptMiddleware(Middleware):
         if new_name is not None:
             new_name = encrypt_name(new_name)
 
-        return await fn(node, new_parent, new_name)
+        return await self._driver.rename_node(node, new_parent, new_name)
 
-    async def download(self, fn: DownloadFunction, node: Node) -> ReadableFile:
+    async def download(self, node: Node) -> ReadableFile:
         private = node.private
         if not private:
-            return await fn(node)
+            return await self._driver.download(node)
         if 'crypt' not in private:
-            return await fn(node)
+            return await self._driver.download(node)
         if private['crypt'] != '1':
             raise InvalidCryptVersion()
 
-        readable = await fn(node)
+        readable = await self._driver.download(node)
         return DecryptReadableFile(readable)
 
     async def upload(self,
-        fn: UploadFunction,
         parent_node: Node,
         file_name: str,
         file_size: Optional[int],
@@ -97,7 +104,7 @@ class CryptMiddleware(Middleware):
 
         file_name = encrypt_name(file_name)
 
-        writable = await fn(
+        writable = await self._driver.upload(
             parent_node,
             file_name,
             file_size=file_size,
@@ -108,7 +115,6 @@ class CryptMiddleware(Middleware):
         return EncryptWritableFile(writable)
 
     async def create_folder(self,
-        fn: CreateFolderFunction,
         parent_node: Node,
         folder_name: str,
         private: Optional[PrivateDict],
@@ -122,8 +128,34 @@ class CryptMiddleware(Middleware):
             raise InvalidCryptVersion()
 
         folder_name = encrypt_name(folder_name)
-        return await fn(parent_node, folder_name, private, exist_ok)
+        return await self._driver.create_folder(
+            parent_node=parent_node,
+            folder_name=folder_name,
+            private=private,
+            exist_ok=exist_ok,
+        )
 
-    async def get_hasher(self, fn: GetHasherFunction) -> Hasher:
-        hasher = await fn()
+    async def get_hasher(self) -> Hasher:
+        hasher = await self._driver.get_hasher()
         return EncryptHasher(hasher)
+
+
+def decode_change(change: ChangeDict) -> ChangeDict:
+    if change['removed']:
+        return change
+
+    dict_ = change['node']
+    if dict_['name'] is None:
+        return change
+
+    private = dict_.get('private', None)
+    if not private:
+        return change
+    if 'crypt' not in private:
+        return change
+    if private['crypt'] != '1':
+        raise InvalidCryptVersion()
+
+    name = decrypt_name(dict_['name'])
+    dict_['name'] = name
+    return change
