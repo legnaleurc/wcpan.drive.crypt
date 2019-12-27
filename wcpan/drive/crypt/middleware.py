@@ -42,6 +42,7 @@ class CryptMiddleware(Middleware):
         async with contextlib.AsyncExitStack() as stack:
             self._driver = await stack.enter_async_context(self._driver)
             self._raii = stack.pop_all()
+        return self
 
     async def __aexit__(self, et, ev, tb) -> bool:
         await self._raii.aclose()
