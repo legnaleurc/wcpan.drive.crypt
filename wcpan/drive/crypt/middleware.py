@@ -47,6 +47,15 @@ class CryptMiddleware(Middleware):
         await self._raii.aclose()
         self._raii = None
 
+    async def get_initial_check_point(self) -> str:
+        return await self._driver.get_initial_check_point()
+
+    async def fetch_root_node(self) -> Node:
+        return await self._driver.fetch_root_node()
+
+    async def trash_node(self, node: Node) -> None:
+        return await self._driver.trash_node(node)
+
     async def fetch_changes(self,
         check_point: str,
     ) -> AsyncGenerator[Tuple[str, List[ChangeDict]], None]:
