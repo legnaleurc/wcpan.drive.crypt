@@ -5,7 +5,6 @@ from wcpan.drive.core.types import (
     ChangeDict,
     MediaInfo,
     Node,
-    NodeDict,
     PrivateDict,
     ReadOnlyContext,
 )
