@@ -15,6 +15,7 @@ from wcpan.drive.core.abc import (
     Hasher,
     RemoteDriver,
 )
+from wcpan.drive.core.exceptions import NodeConflictedError
 
 from .util import (
     DecryptReadableFile,
@@ -87,7 +88,12 @@ class CryptMiddleware(Middleware):
         if new_name is not None:
             new_name = encrypt_name(new_name)
 
-        return await self._driver.rename_node(node, new_parent, new_name)
+        try:
+            return await self._driver.rename_node(node, new_parent, new_name)
+        except NodeConflictedError as e:
+            name = decrypt_name(e.node.name)
+            node = e.node.clone(name=name)
+            raise NodeConflictedError(node) from e
 
     async def download(self, node: Node) -> ReadableFile:
         private = node.private
@@ -119,15 +125,20 @@ class CryptMiddleware(Middleware):
 
         file_name = encrypt_name(file_name)
 
-        writable = await self._driver.upload(
-            parent_node,
-            file_name,
-            file_size=file_size,
-            mime_type=mime_type,
-            media_info=media_info,
-            private=private,
-        )
-        return EncryptWritableFile(writable)
+        try:
+            writable = await self._driver.upload(
+                parent_node,
+                file_name,
+                file_size=file_size,
+                mime_type=mime_type,
+                media_info=media_info,
+                private=private,
+            )
+            return EncryptWritableFile(writable)
+        except NodeConflictedError as e:
+            name = decrypt_name(e.node.name)
+            node = e.node.clone(name=name)
+            raise NodeConflictedError(node) from e
 
     async def create_folder(self,
         parent_node: Node,
@@ -144,12 +155,18 @@ class CryptMiddleware(Middleware):
             raise InvalidCryptVersion()
 
         folder_name = encrypt_name(folder_name)
-        return await self._driver.create_folder(
-            parent_node=parent_node,
-            folder_name=folder_name,
-            private=private,
-            exist_ok=exist_ok,
-        )
+
+        try:
+            return await self._driver.create_folder(
+                parent_node=parent_node,
+                folder_name=folder_name,
+                exist_ok=exist_ok,
+                private=private,
+            )
+        except NodeConflictedError as e:
+            name = decrypt_name(e.node.name)
+            node = e.node.clone(name=name)
+            raise NodeConflictedError(node) from e
 
     async def get_hasher(self) -> Hasher:
         hasher = await self._driver.get_hasher()
