@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-import contextlib
 import datetime
 import re
 import unittest
@@ -242,7 +241,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         # should not touch normal files
         node = create_node('name_1', None)
         new_parent = create_node('name_2', None)
-        await middleware.rename_node(node, new_parent, 'new_name')
+        await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
         driver.rename_node.assert_awaited_once_with(node, new_parent, 'new_name')
         driver.rename_node.reset_mock()
 
@@ -252,7 +251,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         })
         new_parent = create_node('name_2', None)
         with self.assertRaises(InvalidCryptVersion):
-            await middleware.rename_node(node, new_parent, 'new_name')
+            await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
         driver.rename_node.reset_mock()
 
         # should encrypt the name
@@ -260,7 +259,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
             'crypt': '1',
         })
         new_parent = create_node('name_2', None)
-        await middleware.rename_node(node, new_parent, 'new_name')
+        await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
         new_name = encrypt_name('new_name')
         driver.rename_node.assert_awaited_once_with(node, new_parent, new_name)
         driver.rename_node.reset_mock()
@@ -273,14 +272,24 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         # should not accept invalid crypt version
         node = create_node('name', None)
         with self.assertRaises(InvalidCryptVersion):
-            await middleware.create_folder(node, 'new_name', {
-                'crypt': '-1',
-            }, False)
+            await middleware.create_folder(
+                node,
+                'new_name',
+                exist_ok=False,
+                private={
+                    'crypt': '-1',
+                }
+            )
         driver.create_folder.reset_mock()
 
         # should create encrypted file by default
         node = create_node('name', None)
-        await middleware.create_folder(node, 'new_name', None, False)
+        await middleware.create_folder(
+            node,
+            'new_name',
+            exist_ok=False,
+            private=None,
+        )
         new_name = encrypt_name('new_name')
         driver.create_folder.assert_awaited_once_with(
             parent_node=node,
@@ -329,16 +338,30 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         # should not accept invalid crypt version
         node = create_node('name', None)
         with self.assertRaises(InvalidCryptVersion):
-            await middleware.upload(node, 'new_name', None, None, None, {
-                'crypt': '-1',
-            })
+            await middleware.upload(
+                parent_node=node,
+                file_name='new_name',
+                file_size=None,
+                mime_type=None,
+                media_info=None,
+                private={
+                    'crypt': '-1',
+                },
+            )
         driver.upload.reset_mock()
 
         # should create encrypted file by default
         node = create_node('name', None)
-        rv = await middleware.upload(node, 'new_name', None, None, None, {
-            'crypt': '1',
-        })
+        rv = await middleware.upload(
+            node,
+            'new_name',
+            file_size=None,
+            mime_type=None,
+            media_info=None,
+            private={
+                'crypt': '1',
+            },
+        )
         new_name = encrypt_name('new_name')
         driver.upload.assert_awaited_once_with(
             node,
