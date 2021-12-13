@@ -75,10 +75,12 @@ class CryptMiddleware(Middleware):
         new_name: Optional[str],
     ) -> Node:
         private = node.private
-        if not private:
-            return await self._driver.rename_node(node, new_parent, new_name)
-        if 'crypt' not in private:
-            return await self._driver.rename_node(node, new_parent, new_name)
+        if not private or 'crypt' not in private:
+            return await self._driver.rename_node(
+                node,
+                new_parent=new_parent,
+                new_name=new_name,
+            )
         if private['crypt'] != '1':
             raise InvalidCryptVersion()
 
@@ -89,7 +91,11 @@ class CryptMiddleware(Middleware):
             new_name = encrypt_name(new_name)
 
         try:
-            return await self._driver.rename_node(node, new_parent, new_name)
+            return await self._driver.rename_node(
+                node,
+                new_parent=new_parent,
+                new_name=new_name,
+            )
         except NodeConflictedError as e:
             name = decrypt_name(e.node.name)
             node = e.node.clone(name=name)
