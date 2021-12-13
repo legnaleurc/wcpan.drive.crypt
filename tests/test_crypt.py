@@ -242,7 +242,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         node = create_node('name_1', None)
         new_parent = create_node('name_2', None)
         await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
-        driver.rename_node.assert_awaited_once_with(node, new_parent, 'new_name')
+        driver.rename_node.assert_awaited_once_with(node, new_parent=new_parent, new_name='new_name')
         driver.rename_node.reset_mock()
 
         # should not accept invalid crypt version
@@ -261,7 +261,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         new_parent = create_node('name_2', None)
         await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
         new_name = encrypt_name('new_name')
-        driver.rename_node.assert_awaited_once_with(node, new_parent, new_name)
+        driver.rename_node.assert_awaited_once_with(node, new_parent=new_parent, new_name=new_name)
         driver.rename_node.reset_mock()
 
     async def testCreateFolder(self):
