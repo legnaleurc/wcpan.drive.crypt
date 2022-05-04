@@ -31,7 +31,7 @@ class CryptMiddleware(Middleware):
 
     @classmethod
     def get_version_range(cls):
-        return (2, 2)
+        return (3, 3)
 
     def __init__(self, context: ReadOnlyContext, driver: RemoteDriver):
         self._context = context
@@ -177,6 +177,15 @@ class CryptMiddleware(Middleware):
     async def get_hasher(self) -> Hasher:
         hasher = await self._driver.get_hasher()
         return EncryptHasher(hasher)
+
+    async def is_authorized(self) -> bool:
+        return await self._driver.is_authorized()
+
+    async def get_oauth_url(self) -> str:
+        return await self._driver.get_oauth_url()
+
+    async def set_oauth_token(self, token: str) -> None:
+        return await self._driver.set_oauth_token(token)
 
 
 def decode_change(change: ChangeDict) -> ChangeDict:
