@@ -386,6 +386,34 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         driver.get_hasher.assert_awaited_once_with()
         self.assertIsInstance(rv, EncryptHasher)
 
+    async def testIsAuthorized(self):
+        context = Mock()
+        driver = AsyncMock()
+        middleware = CryptMiddleware(context, driver)
+        driver.is_authorized.return_value = False
+
+        rv = await middleware.is_authorized()
+        driver.is_authorized.assert_awaited_once_with()
+        self.assertFalse(rv)
+
+    async def testGetOauthUrl(self):
+        context = Mock()
+        driver = AsyncMock()
+        middleware = CryptMiddleware(context, driver)
+        driver.get_oauth_url.return_value = '__URL__'
+
+        rv = await middleware.get_oauth_url()
+        driver.get_oauth_url.assert_awaited_once_with()
+        self.assertEqual(rv, '__URL__')
+
+    async def testSetOauthToken(self):
+        context = Mock()
+        driver = AsyncMock()
+        middleware = CryptMiddleware(context, driver)
+
+        await middleware.set_oauth_token('__TOKEN__')
+        driver.set_oauth_token.assert_awaited_once_with('__TOKEN__')
+
 
 def create_node(name, private):
     dict_ = {
