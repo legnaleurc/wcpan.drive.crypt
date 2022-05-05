@@ -1,4 +1,4 @@
-from typing import Optional, AsyncGenerator, Tuple, List
+from typing import Optional, AsyncGenerator
 import contextlib
 
 from wcpan.drive.core.types import (
@@ -63,7 +63,7 @@ class CryptMiddleware(Middleware):
 
     async def fetch_changes(self,
         check_point: str,
-    ) -> AsyncGenerator[Tuple[str, List[ChangeDict]], None]:
+    ) -> AsyncGenerator[tuple[str, list[ChangeDict]], None]:
         async for check_point, changes in self._driver.fetch_changes(check_point):
             decoded = [decode_change(change) for change in changes]
             yield check_point, decoded
