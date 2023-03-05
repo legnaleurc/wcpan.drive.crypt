@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "wcpan.drive.crypt"
+version = "3.0.0"
+description = "crypt middleware for wcpan.drive"
+authors = ["Wei-Cheng Pan <legnaleurc@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "wcpan"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.18.0"
+"wcpan.drive.core" = "^3.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
