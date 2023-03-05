@@ -1,4 +1,4 @@
-from typing import Optional, AsyncGenerator
+from typing import AsyncGenerator
 import contextlib
 
 from wcpan.drive.core.types import (
@@ -72,8 +72,8 @@ class CryptMiddleware(Middleware):
         self,
         node: Node,
         *,
-        new_parent: Optional[Node],
-        new_name: Optional[str],
+        new_parent: Node | None,
+        new_name: str | None,
     ) -> Node:
         private = node.private
         if not private or "crypt" not in private:
@@ -119,10 +119,10 @@ class CryptMiddleware(Middleware):
         parent_node: Node,
         file_name: str,
         *,
-        file_size: Optional[int],
-        mime_type: Optional[str],
-        media_info: Optional[MediaInfo],
-        private: Optional[PrivateDict],
+        file_size: int | None,
+        mime_type: str | None,
+        media_info: MediaInfo | None,
+        private: PrivateDict | None,
     ) -> WritableFile:
         if private is None:
             private = {}
@@ -154,7 +154,7 @@ class CryptMiddleware(Middleware):
         folder_name: str,
         *,
         exist_ok: bool,
-        private: Optional[PrivateDict],
+        private: PrivateDict | None,
     ) -> Node:
         if private is None:
             private = {}
