@@ -9,12 +9,10 @@ from wcpan.drive.core.exceptions import DriveError
 
 
 class InvalidCryptVersion(DriveError):
-
     pass
 
 
 class DecryptReadableFile(ReadableFile):
-
     def __init__(self, stream: ReadableFile) -> None:
         self._stream = stream
         self._raii = None
@@ -45,7 +43,6 @@ class DecryptReadableFile(ReadableFile):
 
 
 class EncryptWritableFile(WritableFile):
-
     def __init__(self, stream: WritableFile) -> None:
         self._stream = stream
         self._raii = None
@@ -75,7 +72,6 @@ class EncryptWritableFile(WritableFile):
 
 
 class EncryptHasher(Hasher):
-
     def __init__(self, hasher: Hasher) -> None:
         self._hasher = hasher
 
@@ -105,13 +101,13 @@ def decrypt(chunk: bytes) -> bytes:
 
 
 def encrypt_name(name: str) -> str:
-    bname = name.encode('utf-8')
+    bname = name.encode("utf-8")
     bname = encrypt(bname)
-    return ''.join(('%02x' % c for c in bname))
+    return "".join(("%02x" % c for c in bname))
 
 
 def decrypt_name(name: str) -> str:
-    hex_list = (name[i:i+2] for i in range(0, len(name), 2))
+    hex_list = (name[i : i + 2] for i in range(0, len(name), 2))
     bname = bytes((int(c, 16) for c in hex_list))
     bname = decrypt(bname)
-    return bname.decode('utf-8')
+    return bname.decode("utf-8")

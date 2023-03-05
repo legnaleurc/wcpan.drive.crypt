@@ -28,7 +28,6 @@ from .util import (
 
 
 class CryptMiddleware(Middleware):
-
     @classmethod
     def get_version_range(cls):
         return (3, 3)
@@ -61,27 +60,29 @@ class CryptMiddleware(Middleware):
     async def trash_node(self, node: Node) -> None:
         return await self._driver.trash_node(node)
 
-    async def fetch_changes(self,
+    async def fetch_changes(
+        self,
         check_point: str,
     ) -> AsyncGenerator[tuple[str, list[ChangeDict]], None]:
         async for check_point, changes in self._driver.fetch_changes(check_point):
             decoded = [decode_change(change) for change in changes]
             yield check_point, decoded
 
-    async def rename_node(self,
+    async def rename_node(
+        self,
         node: Node,
         *,
         new_parent: Optional[Node],
         new_name: Optional[str],
     ) -> Node:
         private = node.private
-        if not private or 'crypt' not in private:
+        if not private or "crypt" not in private:
             return await self._driver.rename_node(
                 node,
                 new_parent=new_parent,
                 new_name=new_name,
             )
-        if private['crypt'] != '1':
+        if private["crypt"] != "1":
             raise InvalidCryptVersion()
 
         if node.name is not None:
@@ -105,15 +106,16 @@ class CryptMiddleware(Middleware):
         private = node.private
         if not private:
             return await self._driver.download(node)
-        if 'crypt' not in private:
+        if "crypt" not in private:
             return await self._driver.download(node)
-        if private['crypt'] != '1':
+        if private["crypt"] != "1":
             raise InvalidCryptVersion()
 
         readable = await self._driver.download(node)
         return DecryptReadableFile(readable)
 
-    async def upload(self,
+    async def upload(
+        self,
         parent_node: Node,
         file_name: str,
         *,
@@ -124,9 +126,9 @@ class CryptMiddleware(Middleware):
     ) -> WritableFile:
         if private is None:
             private = {}
-        if 'crypt' not in private:
-            private['crypt'] = '1'
-        if private['crypt'] != '1':
+        if "crypt" not in private:
+            private["crypt"] = "1"
+        if private["crypt"] != "1":
             raise InvalidCryptVersion()
 
         file_name = encrypt_name(file_name)
@@ -146,7 +148,8 @@ class CryptMiddleware(Middleware):
             node = e.node.clone(name=name)
             raise NodeConflictedError(node) from e
 
-    async def create_folder(self,
+    async def create_folder(
+        self,
         parent_node: Node,
         folder_name: str,
         *,
@@ -155,9 +158,9 @@ class CryptMiddleware(Middleware):
     ) -> Node:
         if private is None:
             private = {}
-        if 'crypt' not in private:
-            private['crypt'] = '1'
-        if private['crypt'] != '1':
+        if "crypt" not in private:
+            private["crypt"] = "1"
+        if private["crypt"] != "1":
             raise InvalidCryptVersion()
 
         folder_name = encrypt_name(folder_name)
@@ -189,21 +192,21 @@ class CryptMiddleware(Middleware):
 
 
 def decode_change(change: ChangeDict) -> ChangeDict:
-    if change['removed']:
+    if change["removed"]:
         return change
 
-    dict_ = change['node']
-    if dict_['name'] is None:
+    dict_ = change["node"]
+    if dict_["name"] is None:
         return change
 
-    private = dict_.get('private', None)
+    private = dict_.get("private", None)
     if not private:
         return change
-    if 'crypt' not in private:
+    if "crypt" not in private:
         return change
-    if private['crypt'] != '1':
+    if private["crypt"] != "1":
         raise InvalidCryptVersion()
 
-    name = decrypt_name(dict_['name'])
-    dict_['name'] = name
+    name = decrypt_name(dict_["name"])
+    dict_["name"] = name
     return change

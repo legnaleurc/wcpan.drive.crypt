@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import datetime
 import re
@@ -19,7 +19,6 @@ from wcpan.drive.core.types import Node
 
 
 class TestCrypt(unittest.TestCase):
-
     def testBinaryCrypt(self):
         binary = bytes(range(255))
 
@@ -32,15 +31,15 @@ class TestCrypt(unittest.TestCase):
 
     def testNameCrypt(self):
         text = (
-            '1234567890'
-            'abcdefghijklmnopqrstuvwxyz'
-            '().~@-[]{}:,'
-            'レオナルド・ディ・セル・ピエーロ・ダ・ヴィンチ'
+            "1234567890"
+            "abcdefghijklmnopqrstuvwxyz"
+            "().~@-[]{}:,"
+            "レオナルド・ディ・セル・ピエーロ・ダ・ヴィンチ"
         )
 
         encoded = encrypt_name(text)
         self.assertNotEqual(encoded, text)
-        matched = re.match(r'^[a-z0-9]+$', encoded)
+        matched = re.match(r"^[a-z0-9]+$", encoded)
         self.assertIsNotNone(matched)
 
         decoded = decrypt_name(encoded)
@@ -48,7 +47,6 @@ class TestCrypt(unittest.TestCase):
 
 
 class TestHasher(unittest.TestCase):
-
     def setUp(self):
         self._mock = Mock()
         self._hasher = EncryptHasher(self._mock)
@@ -58,7 +56,7 @@ class TestHasher(unittest.TestCase):
         self._mock = None
 
     def testUpdate(self):
-        chunk = b'1234abcd'
+        chunk = b"1234abcd"
         self._hasher.update(chunk)
         chunk = encrypt(chunk)
         self._mock.update.assert_called_once_with(chunk)
@@ -78,7 +76,6 @@ class TestHasher(unittest.TestCase):
 
 
 class TestDecryptReadableFile(unittest.IsolatedAsyncioTestCase):
-
     async def testContextManager(self):
         mock = AsyncMock()
         async with DecryptReadableFile(mock) as dummy_fin:
@@ -88,9 +85,10 @@ class TestDecryptReadableFile(unittest.IsolatedAsyncioTestCase):
 
     async def testIterable(self):
         content_list = [
-            b'xyz',
-            b'123',
+            b"xyz",
+            b"123",
         ]
+
         async def fake_iterator(self):
             for content in content_list:
                 yield encrypt(content)
@@ -104,7 +102,7 @@ class TestDecryptReadableFile(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(chunk_list, content_list)
 
     async def testRead(self):
-        content = b'789abc'
+        content = b"789abc"
         mock = AsyncMock()
         mock.read = AsyncMock(return_value=encrypt(content))
         async with DecryptReadableFile(mock) as fin:
@@ -127,7 +125,6 @@ class TestDecryptReadableFile(unittest.IsolatedAsyncioTestCase):
 
 
 class TestEncryptWritableFile(unittest.IsolatedAsyncioTestCase):
-
     async def testContextManager(self):
         mock = AsyncMock()
         async with EncryptWritableFile(mock) as dummy_fout:
@@ -148,7 +145,7 @@ class TestEncryptWritableFile(unittest.IsolatedAsyncioTestCase):
         mock.seek.assert_awaited_once_with(123)
 
     async def testWrite(self):
-        content = b'xyz456'
+        content = b"xyz456"
         mock = AsyncMock()
         async with EncryptWritableFile(mock) as fout:
             await fout.write(content)
@@ -164,73 +161,80 @@ class TestEncryptWritableFile(unittest.IsolatedAsyncioTestCase):
 
 
 class TestMiddleware(unittest.IsolatedAsyncioTestCase):
-
     async def testFetchChanges(self):
         context = Mock()
         driver = AsyncMock()
         middleware = CryptMiddleware(context, driver)
 
         async def fake_fetch_changes(dummy):
-            yield '1', [
+            yield "1", [
                 {
-                    'removed': True,
-                    'id': 1,
+                    "removed": True,
+                    "id": 1,
                 },
                 {
-                    'removed': False,
-                    'node': {
-                        'name': 'name',
-                        'private': None,
+                    "removed": False,
+                    "node": {
+                        "name": "name",
+                        "private": None,
                     },
                 },
                 {
-                    'removed': False,
-                    'node': {
-                        'name': encrypt_name('name'),
-                        'private': {
-                            'crypt': '1',
+                    "removed": False,
+                    "node": {
+                        "name": encrypt_name("name"),
+                        "private": {
+                            "crypt": "1",
                         },
                     },
                 },
             ]
+
         driver.fetch_changes = fake_fetch_changes
 
-        async for dummy, changes in middleware.fetch_changes('1'):
+        async for dummy, changes in middleware.fetch_changes("1"):
             # should not touch remove changes
-            self.assertEqual(changes[0], {
-                'removed': True,
-                'id': 1,
-            })
+            self.assertEqual(
+                changes[0],
+                {
+                    "removed": True,
+                    "id": 1,
+                },
+            )
 
             # should not touch normal files
-            self.assertEqual(changes[1], {
-                'removed': False,
-                'node': {
-                    'name': 'name',
-                    'private': None,
+            self.assertEqual(
+                changes[1],
+                {
+                    "removed": False,
+                    "node": {
+                        "name": "name",
+                        "private": None,
+                    },
                 },
-            })
+            )
 
             # should decrypt the name
-            self.assertEqual(changes[1]['node']['name'], 'name')
+            self.assertEqual(changes[1]["node"]["name"], "name")
 
         async def fake_fetch_changes_2(dummy):
-            yield '1', [
+            yield "1", [
                 {
-                    'removed': False,
-                    'node': {
-                        'name': 'name',
-                        'private': {
-                            'crypt': '-1',
+                    "removed": False,
+                    "node": {
+                        "name": "name",
+                        "private": {
+                            "crypt": "-1",
                         },
                     },
                 },
             ]
+
         driver.fetch_changes = fake_fetch_changes_2
 
         # should not accept invalid crypt version
         with self.assertRaises(InvalidCryptVersion):
-            async for dummy, changes in middleware.fetch_changes('1'):
+            async for dummy, changes in middleware.fetch_changes("1"):
                 pass
 
     async def testRenameNode(self):
@@ -239,29 +243,41 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         middleware = CryptMiddleware(context, driver)
 
         # should not touch normal files
-        node = create_node('name_1', None)
-        new_parent = create_node('name_2', None)
-        await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
-        driver.rename_node.assert_awaited_once_with(node, new_parent=new_parent, new_name='new_name')
+        node = create_node("name_1", None)
+        new_parent = create_node("name_2", None)
+        await middleware.rename_node(node, new_parent=new_parent, new_name="new_name")
+        driver.rename_node.assert_awaited_once_with(
+            node, new_parent=new_parent, new_name="new_name"
+        )
         driver.rename_node.reset_mock()
 
         # should not accept invalid crypt version
-        node = create_node('name_1', {
-            'crypt': '-1',
-        })
-        new_parent = create_node('name_2', None)
+        node = create_node(
+            "name_1",
+            {
+                "crypt": "-1",
+            },
+        )
+        new_parent = create_node("name_2", None)
         with self.assertRaises(InvalidCryptVersion):
-            await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
+            await middleware.rename_node(
+                node, new_parent=new_parent, new_name="new_name"
+            )
         driver.rename_node.reset_mock()
 
         # should encrypt the name
-        node = create_node('name_1', {
-            'crypt': '1',
-        })
-        new_parent = create_node('name_2', None)
-        await middleware.rename_node(node, new_parent=new_parent, new_name='new_name')
-        new_name = encrypt_name('new_name')
-        driver.rename_node.assert_awaited_once_with(node, new_parent=new_parent, new_name=new_name)
+        node = create_node(
+            "name_1",
+            {
+                "crypt": "1",
+            },
+        )
+        new_parent = create_node("name_2", None)
+        await middleware.rename_node(node, new_parent=new_parent, new_name="new_name")
+        new_name = encrypt_name("new_name")
+        driver.rename_node.assert_awaited_once_with(
+            node, new_parent=new_parent, new_name=new_name
+        )
         driver.rename_node.reset_mock()
 
     async def testCreateFolder(self):
@@ -270,32 +286,32 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         middleware = CryptMiddleware(context, driver)
 
         # should not accept invalid crypt version
-        node = create_node('name', None)
+        node = create_node("name", None)
         with self.assertRaises(InvalidCryptVersion):
             await middleware.create_folder(
                 node,
-                'new_name',
+                "new_name",
                 exist_ok=False,
                 private={
-                    'crypt': '-1',
-                }
+                    "crypt": "-1",
+                },
             )
         driver.create_folder.reset_mock()
 
         # should create encrypted file by default
-        node = create_node('name', None)
+        node = create_node("name", None)
         await middleware.create_folder(
             node,
-            'new_name',
+            "new_name",
             exist_ok=False,
             private=None,
         )
-        new_name = encrypt_name('new_name')
+        new_name = encrypt_name("new_name")
         driver.create_folder.assert_awaited_once_with(
             parent_node=node,
             folder_name=new_name,
             private={
-                'crypt': '1',
+                "crypt": "1",
             },
             exist_ok=False,
         )
@@ -307,24 +323,30 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         middleware = CryptMiddleware(context, driver)
 
         # should not accept invalid crypt version
-        node = create_node('name', {
-            'crypt': '-1',
-        })
+        node = create_node(
+            "name",
+            {
+                "crypt": "-1",
+            },
+        )
         with self.assertRaises(InvalidCryptVersion):
             await middleware.download(node)
         driver.download.reset_mock()
 
         # should not touch normal file
-        node = create_node('name', None)
+        node = create_node("name", None)
         rv = await middleware.download(node)
         driver.download.assert_awaited_once_with(node)
         self.assertNotIsInstance(rv, DecryptReadableFile)
         driver.download.reset_mock()
 
         # should create decrypt stream
-        node = create_node('name', {
-            'crypt': '1',
-        })
+        node = create_node(
+            "name",
+            {
+                "crypt": "1",
+            },
+        )
         rv = await middleware.download(node)
         driver.download.assert_awaited_once_with(node)
         self.assertIsInstance(rv, DecryptReadableFile)
@@ -336,33 +358,33 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         middleware = CryptMiddleware(context, driver)
 
         # should not accept invalid crypt version
-        node = create_node('name', None)
+        node = create_node("name", None)
         with self.assertRaises(InvalidCryptVersion):
             await middleware.upload(
                 parent_node=node,
-                file_name='new_name',
+                file_name="new_name",
                 file_size=None,
                 mime_type=None,
                 media_info=None,
                 private={
-                    'crypt': '-1',
+                    "crypt": "-1",
                 },
             )
         driver.upload.reset_mock()
 
         # should create encrypted file by default
-        node = create_node('name', None)
+        node = create_node("name", None)
         rv = await middleware.upload(
             node,
-            'new_name',
+            "new_name",
             file_size=None,
             mime_type=None,
             media_info=None,
             private={
-                'crypt': '1',
+                "crypt": "1",
             },
         )
-        new_name = encrypt_name('new_name')
+        new_name = encrypt_name("new_name")
         driver.upload.assert_awaited_once_with(
             node,
             new_name,
@@ -370,7 +392,7 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
             mime_type=None,
             media_info=None,
             private={
-                'crypt': '1',
+                "crypt": "1",
             },
         )
         self.assertIsInstance(rv, EncryptWritableFile)
@@ -400,35 +422,35 @@ class TestMiddleware(unittest.IsolatedAsyncioTestCase):
         context = Mock()
         driver = AsyncMock()
         middleware = CryptMiddleware(context, driver)
-        driver.get_oauth_url.return_value = '__URL__'
+        driver.get_oauth_url.return_value = "__URL__"
 
         rv = await middleware.get_oauth_url()
         driver.get_oauth_url.assert_awaited_once_with()
-        self.assertEqual(rv, '__URL__')
+        self.assertEqual(rv, "__URL__")
 
     async def testSetOauthToken(self):
         context = Mock()
         driver = AsyncMock()
         middleware = CryptMiddleware(context, driver)
 
-        await middleware.set_oauth_token('__TOKEN__')
-        driver.set_oauth_token.assert_awaited_once_with('__TOKEN__')
+        await middleware.set_oauth_token("__TOKEN__")
+        driver.set_oauth_token.assert_awaited_once_with("__TOKEN__")
 
 
 def create_node(name, private):
     dict_ = {
-        'id': name,
-        'name': name,
-        'trashed': False,
-        'created': get_utc_now(),
-        'modified': get_utc_now(),
-        'is_folder': True,
-        'mime_type': None,
-        'hash': None,
-        'size': None,
-        'image': None,
-        'video': None,
-        'private': private,
+        "id": name,
+        "name": name,
+        "trashed": False,
+        "created": get_utc_now(),
+        "modified": get_utc_now(),
+        "is_folder": True,
+        "mime_type": None,
+        "hash": None,
+        "size": None,
+        "image": None,
+        "video": None,
+        "private": private,
     }
     return Node.from_dict(dict_)
 
