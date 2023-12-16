@@ -15,7 +15,7 @@ from wcpan.drive.core.types import (
 )
 from wcpan.drive.core.exceptions import NodeExistsError
 
-from .lib import (
+from ._lib import (
     DecryptReadableFile,
     EncryptWritableFile,
     InvalidCryptVersion,
@@ -52,6 +52,10 @@ class CryptFileService(FileService):
     @override
     async def purge_trash(self) -> None:
         return await self._fs.purge_trash()
+
+    @override
+    async def delete(self, node: Node) -> None:
+        return await self._fs.delete(node)
 
     @override
     async def get_changes(
