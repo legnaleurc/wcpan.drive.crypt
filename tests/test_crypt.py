@@ -3,7 +3,7 @@
 import re
 from unittest import TestCase
 
-from wcpan.drive.crypt.lib import (
+from wcpan.drive.crypt._lib import (
     decrypt,
     decrypt_name,
     encrypt,

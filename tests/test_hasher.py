@@ -2,7 +2,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
 from typing import cast
 
-from wcpan.drive.crypt.lib import EncryptHasher, encrypt
+from wcpan.drive.crypt._lib import EncryptHasher, encrypt
 from wcpan.drive.core.types import Hasher
 
 from ._lib import aexpect
