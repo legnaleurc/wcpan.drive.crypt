@@ -1,4 +1,4 @@
-from typing import TypeGuard, override
+from typing import TypeGuard, override, Self
 from collections.abc import AsyncIterator
 
 import numpy
@@ -64,8 +64,10 @@ class EncryptWritableFile(WritableFile):
         return await self._stream.flush()
 
     @override
-    async def node(self) -> Node | None:
-        return await self._stream.node()
+    async def node(self) -> Node:
+        node = await self._stream.node()
+        node = decrypt_node(node)
+        return node
 
 
 async def create_hasher(factory: CreateHasher) -> Hasher:
@@ -90,9 +92,9 @@ class EncryptHasher(Hasher):
         return await self._hasher.hexdigest()
 
     @override
-    async def copy(self) -> Hasher:
+    async def copy(self) -> Self:
         hasher = await self._hasher.copy()
-        return EncryptHasher(hasher)
+        return self.__class__(hasher)
 
 
 def encrypt(chunk: bytes) -> bytes:
