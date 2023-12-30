@@ -2,10 +2,10 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
 from typing import cast
 
-from wcpan.drive.crypt._lib import EncryptWritableFile, encrypt
+from wcpan.drive.crypt._lib import EncryptWritableFile, encrypt, encrypt_name
 from wcpan.drive.core.types import WritableFile
 
-from ._lib import aexpect
+from ._lib import aexpect, create_amock, create_node
 
 
 class EncryptWritableFileTestCase(IsolatedAsyncioTestCase):
@@ -36,9 +36,11 @@ class EncryptWritableFileTestCase(IsolatedAsyncioTestCase):
         aexpect(mock.write).assert_awaited_once_with(content)
 
     async def testNode(self):
-        mock = cast(WritableFile, AsyncMock(spec=WritableFile))
+        mock = create_amock(WritableFile)
+        aexpect(mock.node).return_value = create_node(encrypt_name("name"), None)
 
         fout = EncryptWritableFile(mock)
-        await fout.node()
+        node = await fout.node()
 
         aexpect(mock.node).assert_awaited_once_with()
+        self.assertEqual(node.name, "name")
