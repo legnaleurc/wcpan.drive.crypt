@@ -1,4 +1,4 @@
-from typing import TypeGuard, override, Self
+from typing import override, Self
 from collections.abc import AsyncIterator
 
 import numpy
@@ -9,9 +9,9 @@ from wcpan.drive.core.types import (
     WritableFile,
     Hasher,
     ChangeAction,
-    UpdateAction,
     CreateHasher,
 )
+from wcpan.drive.core.lib import dispatch_change
 from wcpan.drive.core.exceptions import DriveError
 
 
@@ -138,22 +138,22 @@ def decrypt_node(node: Node) -> Node:
     return node
 
 
-def is_updated(change: ChangeAction) -> TypeGuard[UpdateAction]:
-    return not change[0]
-
-
 def decode_change(change: ChangeAction) -> ChangeAction:
-    if not is_updated(change):
-        return change
+    return dispatch_change(
+        change,
+        on_remove=lambda _: (True, _),
+        on_update=lambda _: (False, decode_node(_)),
+    )
 
-    node = change[1]
+
+def decode_node(node: Node) -> Node:
     private = node.private
     if not private:
-        return change
+        return node
     if "crypt" not in private:
-        return change
+        return node
     if private["crypt"] != "1":
         raise InvalidCryptVersion()
 
     node = decrypt_node(node)
-    return change[0], node
+    return node
