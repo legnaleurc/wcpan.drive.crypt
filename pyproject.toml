@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wcpan-drive-crypt"
-version = "4.1.0"
+version = "4.1.1"
 description = "crypt middleware for wcpan.drive"
 authors = ["Wei-Cheng Pan <legnaleurc@gmail.com>"]
 license = "MIT"
