@@ -1,10 +1,16 @@
-[tool.poetry]
+[project]
 name = "wcpan-drive-crypt"
 version = "4.1.1"
 description = "crypt middleware for wcpan.drive"
-authors = ["Wei-Cheng Pan <legnaleurc@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+authors = [
+    {name = "Wei-Cheng Pan", email = "legnaleurc@gmail.com"}
+]
+dynamic = ["classifiers", "requires-python", "dependencies"]
+
+[tool.poetry]
+requires-poetry = "^2.1"
 packages = [{include = "wcpan"}]
 classifiers = [
     "Development Status :: 3 - Alpha",
