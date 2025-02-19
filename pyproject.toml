@@ -1,6 +1,6 @@
 [project]
 name = "wcpan-drive-crypt"
-version = "4.1.1"
+version = "4.1.2"
 description = "crypt middleware for wcpan.drive"
 license = "MIT"
 readme = "README.md"
