@@ -1,9 +1,10 @@
+from typing import cast
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
-from typing import cast
+
+from wcpan.drive.core.types import ReadableFile
 
 from wcpan.drive.crypt._lib import DecryptReadableFile, encrypt
-from wcpan.drive.core.types import ReadableFile
 
 from ._lib import aexpect
 

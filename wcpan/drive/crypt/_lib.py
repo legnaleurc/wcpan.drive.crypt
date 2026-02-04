@@ -1,18 +1,17 @@
-from typing import override, Self
 from collections.abc import AsyncIterator
+from typing import Self, override
 
 import numpy
-
+from wcpan.drive.core.exceptions import DriveError
+from wcpan.drive.core.lib import dispatch_change
 from wcpan.drive.core.types import (
+    ChangeAction,
+    CreateHasher,
+    Hasher,
     Node,
     ReadableFile,
     WritableFile,
-    Hasher,
-    ChangeAction,
-    CreateHasher,
 )
-from wcpan.drive.core.lib import dispatch_change
-from wcpan.drive.core.exceptions import DriveError
 
 
 class InvalidCryptVersion(DriveError):

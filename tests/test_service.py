@@ -1,6 +1,8 @@
+from typing import cast
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
-from typing import cast
+
+from wcpan.drive.core.types import FileService, Node
 
 from wcpan.drive.crypt._lib import (
     DecryptReadableFile,
@@ -10,14 +12,13 @@ from wcpan.drive.crypt._lib import (
     encrypt_name,
 )
 from wcpan.drive.crypt._service import CryptFileService
-from wcpan.drive.core.types import Node, FileService
 
 from ._lib import (
-    create_node,
     aexpect,
-    expect,
-    create_mock,
     create_amock,
+    create_mock,
+    create_node,
+    expect,
     fake_create_hasher,
 )
 
@@ -28,9 +29,12 @@ class GetChangesTestCase(IsolatedAsyncioTestCase):
         fs = CryptFileService(upstream)
 
         async def fake_fetch_changes(dummy: object):
-            yield [
-                (True, 1),
-            ], "1"
+            yield (
+                [
+                    (True, 1),
+                ],
+                "1",
+            )
 
         upstream.get_changes = fake_fetch_changes
 
@@ -48,9 +52,12 @@ class GetChangesTestCase(IsolatedAsyncioTestCase):
         plain_node = create_node("name", None)
 
         async def fake_fetch_changes(dummy: object):
-            yield [
-                (False, plain_node),
-            ], "1"
+            yield (
+                [
+                    (False, plain_node),
+                ],
+                "1",
+            )
 
         upstream.get_changes = fake_fetch_changes
 
@@ -73,9 +80,12 @@ class GetChangesTestCase(IsolatedAsyncioTestCase):
         )
 
         async def fake_fetch_changes(dummy: object):
-            yield [
-                (False, crypted_node),
-            ], "1"
+            yield (
+                [
+                    (False, crypted_node),
+                ],
+                "1",
+            )
 
         upstream.get_changes = fake_fetch_changes
 
@@ -89,9 +99,12 @@ class GetChangesTestCase(IsolatedAsyncioTestCase):
         fs = CryptFileService(upstream)
 
         async def fake_fetch_changes(dummy: object):
-            yield [
-                (False, create_node("name", {"crypt": "-1"})),
-            ], "1"
+            yield (
+                [
+                    (False, create_node("name", {"crypt": "-1"})),
+                ],
+                "1",
+            )
 
         upstream.get_changes = fake_fetch_changes
 
