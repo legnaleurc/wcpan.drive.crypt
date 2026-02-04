@@ -2,30 +2,38 @@
 name = "wcpan-drive-crypt"
 version = "4.1.2"
 description = "crypt middleware for wcpan.drive"
-license = "MIT"
 readme = "README.md"
+license = {text = "MIT"}
 authors = [
     {name = "Wei-Cheng Pan", email = "legnaleurc@gmail.com"}
 ]
-dynamic = ["classifiers", "requires-python", "dependencies"]
-
-[tool.poetry]
-requires-poetry = "^2.1"
-packages = [{include = "wcpan"}]
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "wcpan-drive-core>=4.1.0,<5.0.0",
+    "numpy>=2.2.3,<3.0.0",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-wcpan-drive-core = "^4.1.0"
-numpy = "^2.2.3"
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.15.0"
+[dependency-groups]
+dev = [
+    "ruff>=0.15.0,<0.16.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wcpan"]
+
+[tool.hatch.build.targets.sdist]
+packages = ["wcpan"]
