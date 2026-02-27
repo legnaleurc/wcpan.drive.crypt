@@ -99,7 +99,7 @@ wheels = [
 
 [[package]]
 name = "wcpan-drive-crypt"
-version = "4.1.2"
+version = "5.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
