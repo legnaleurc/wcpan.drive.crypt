@@ -39,7 +39,7 @@ class CryptFileService(FileService):
     @property
     @override
     def api_version(self) -> int:
-        return 4
+        return 5
 
     @override
     async def get_initial_cursor(self) -> str:
@@ -185,13 +185,9 @@ class CryptFileService(FileService):
         return partial(create_hasher, factory)
 
     @override
-    async def is_authorized(self) -> bool:
-        return await self._fs.is_authorized()
+    async def is_authenticated(self) -> bool:
+        return await self._fs.is_authenticated()
 
     @override
-    async def get_oauth_url(self) -> str:
-        return await self._fs.get_oauth_url()
-
-    @override
-    async def set_oauth_token(self, token: str) -> None:
-        return await self._fs.set_oauth_token(token)
+    async def authenticate(self) -> None:
+        return await self._fs.authenticate()
