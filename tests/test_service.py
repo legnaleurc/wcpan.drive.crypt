@@ -122,9 +122,9 @@ class MoveTestCase(IsolatedAsyncioTestCase):
         # should not touch normal files
         node = create_node("name_1", None)
         new_parent = create_node("name_2", None)
-        await fs.move(node, new_parent=new_parent, new_name="new_name", trashed=None)
+        await fs.move(node, new_parent=new_parent, new_name="new_name")
         aexpect(upstream.move).assert_awaited_once_with(
-            node, new_parent=new_parent, new_name="new_name", trashed=None
+            node, new_parent=new_parent, new_name="new_name"
         )
 
     async def testCrypt(self):
@@ -140,9 +140,7 @@ class MoveTestCase(IsolatedAsyncioTestCase):
         )
         new_parent = create_node("name_2", None)
         with self.assertRaises(InvalidCryptVersion):
-            await fs.move(
-                node, new_parent=new_parent, new_name="new_name", trashed=None
-            )
+            await fs.move(node, new_parent=new_parent, new_name="new_name")
 
     async def testInvalid(self):
         upstream = create_amock(FileService)
@@ -157,9 +155,7 @@ class MoveTestCase(IsolatedAsyncioTestCase):
         )
         new_parent = create_node("name_2", None)
         with self.assertRaises(InvalidCryptVersion):
-            await fs.move(
-                node, new_parent=new_parent, new_name="new_name", trashed=None
-            )
+            await fs.move(node, new_parent=new_parent, new_name="new_name")
         aexpect(upstream.move).reset_mock()
 
 

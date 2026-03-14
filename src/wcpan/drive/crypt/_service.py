@@ -54,8 +54,12 @@ class CryptFileService(FileService):
         return await self._fs.purge_trash()
 
     @override
-    async def delete(self, node: Node) -> None:
-        return await self._fs.delete(node)
+    async def delete(self, node: Node, *, permanent: bool = False) -> None:
+        return await self._fs.delete(node, permanent=permanent)
+
+    @override
+    async def restore(self, node: Node) -> Node:
+        return await self._fs.restore(node)
 
     @override
     async def get_changes(
@@ -73,7 +77,6 @@ class CryptFileService(FileService):
         *,
         new_parent: Node | None,
         new_name: str | None,
-        trashed: bool | None,
     ) -> Node:
         private = node.private
         if not private or "crypt" not in private:
@@ -81,7 +84,6 @@ class CryptFileService(FileService):
                 node,
                 new_parent=new_parent,
                 new_name=new_name,
-                trashed=trashed,
             )
         if private["crypt"] != "1":
             raise InvalidCryptVersion()
@@ -96,7 +98,6 @@ class CryptFileService(FileService):
                 node,
                 new_parent=new_parent,
                 new_name=new_name,
-                trashed=trashed,
             )
         except NodeExistsError as e:
             raise NodeExistsError(decrypt_node(e.node)) from e
