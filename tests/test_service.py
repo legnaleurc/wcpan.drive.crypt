@@ -326,27 +326,18 @@ class SimpleTestCase(IsolatedAsyncioTestCase):
         hasher = await new_fn()
         self.assertIsInstance(hasher, EncryptHasher)
 
-    async def testIsAuthorized(self):
+    async def testIsAuthenticated(self):
         upstream = create_amock(FileService)
         fs = CryptFileService(upstream)
-        aexpect(upstream.is_authorized).return_value = False
+        aexpect(upstream.is_authenticated).return_value = False
 
-        rv = await fs.is_authorized()
-        aexpect(upstream.is_authorized).assert_awaited_once_with()
+        rv = await fs.is_authenticated()
+        aexpect(upstream.is_authenticated).assert_awaited_once_with()
         self.assertFalse(rv)
 
-    async def testGetOauthUrl(self):
-        upstream = create_amock(FileService)
-        fs = CryptFileService(upstream)
-        aexpect(upstream.get_oauth_url).return_value = "__URL__"
-
-        rv = await fs.get_oauth_url()
-        aexpect(upstream.get_oauth_url).assert_awaited_once_with()
-        self.assertEqual(rv, "__URL__")
-
-    async def testSetOauthToken(self):
+    async def testAuthenticate(self):
         upstream = create_amock(FileService)
         fs = CryptFileService(upstream)
 
-        await fs.set_oauth_token("__TOKEN__")
-        aexpect(upstream.set_oauth_token).assert_awaited_once_with("__TOKEN__")
+        await fs.authenticate()
+        aexpect(upstream.authenticate).assert_awaited_once_with()
